@@ -67,10 +67,10 @@ void UGSAT_WaitInteractableTarget::LineTrace(FHitResult& OutHitResult, const UWo
 	{
 		const FHitResult& Hit = HitResults[HitIdx];
 
-		if (!Hit.Actor.IsValid() || Hit.Actor != Ability->GetCurrentActorInfo()->AvatarActor.Get())
+		if (!IsValid(Hit.GetActor()) || Hit.GetActor() != Ability->GetCurrentActorInfo()->AvatarActor.Get())
 		{
 			// If bLookForInteractableActor is false, we're looking for an endpoint to trace to
-			if (bLookForInteractableActor && Hit.Actor.IsValid())
+			if (bLookForInteractableActor && IsValid(Hit.GetActor()))
 			{
 				// bLookForInteractableActor is true, hit component must overlap COLLISION_INTERACTABLE trace channel
 				// This is so that a big Actor like a computer can have a small interactable button.
@@ -78,9 +78,9 @@ void UGSAT_WaitInteractableTarget::LineTrace(FHitResult& OutHitResult, const UWo
 					== ECollisionResponse::ECR_Overlap)
 				{
 					// Component/Actor must be available to interact
-					bool bIsInteractable = Hit.Actor.Get()->Implements<UGSInteractable>();
+					bool bIsInteractable = Hit.GetActor()->Implements<UGSInteractable>();
 
-					if (bIsInteractable && IGSInteractable::Execute_IsAvailableForInteraction(Hit.Actor.Get(), Hit.Component.Get()))
+					if (bIsInteractable && IGSInteractable::Execute_IsAvailableForInteraction(Hit.GetActor(), Hit.Component.Get()))
 					{
 						OutHitResult = Hit;
 						OutHitResult.bBlockingHit = true; // treat it as a blocking hit
@@ -94,7 +94,7 @@ void UGSAT_WaitInteractableTarget::LineTrace(FHitResult& OutHitResult, const UWo
 			}
 
 			// This is for the first line trace to get an end point to trace to
-			// !Hit.Actor.IsValid() implies we didn't hit anything so return the endpoint as a blocking hit
+			// !IsValid(Hit.GetActor()) implies we didn't hit anything so return the endpoint as a blocking hit
 			// Or if we hit something else
 			OutHitResult = Hit;
 			OutHitResult.bBlockingHit = true; // treat it as a blocking hit
@@ -223,7 +223,7 @@ void UGSAT_WaitInteractableTarget::PerformTrace()
 		// No valid, available Interactable Actor
 
 		ReturnHitResult.Location = TraceEnd;
-		if (TargetData.Num() > 0 && TargetData.Get(0)->GetHitResult()->Actor.Get())
+		if (TargetData.Num() > 0 && TargetData.Get(0)->GetHitResult()->GetActor())
 		{
 			// Previous trace had a valid Interactable Actor, now we don't have one
 			// Broadcast last valid target
@@ -240,9 +240,9 @@ void UGSAT_WaitInteractableTarget::PerformTrace()
 
 		if (TargetData.Num() > 0)
 		{
-			const AActor* OldTarget = TargetData.Get(0)->GetHitResult()->Actor.Get();
+			const AActor* OldTarget = TargetData.Get(0)->GetHitResult()->GetActor();
 
-			if (OldTarget == ReturnHitResult.Actor.Get())
+			if (OldTarget == ReturnHitResult.GetActor())
 			{
 				// Old target is the same as the new target, don't broadcast the target
 				bBroadcastNewTarget = false;
